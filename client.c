@@ -67,17 +67,23 @@ char *INBOUND(int cfd)
     { // the other connection has closed the socket (ctrl-C)
         return NULL;
     }
-    fprintf(stdout, "[+]Data Recieved\n");
+    //fprintf(stdout, "[+]Data Recieved\n");
     return buff;
 }
 int communication(int cfd)
 {
     char *returned;
+    char *endcheck;
+    char end1[] = {'y','e','.','\0'};
+    char end2[] = {'E','N','D','\0'};
     char buffer[BUFSIZE];
     while (1)
     {
         returned = INBOUND(cfd);
-        if (strcmp(returned, "END") == 0)
+        endcheck = (char *) malloc(4 * sizeof(char));
+        endcheck = &returned[strlen(returned)-4];
+        endcheck[3] = '\0';
+        if (strcmp(endcheck, end1) == 0 || strcmp(endcheck, end2) == 0)
         {
             printf("[-]Server has closed the connection.\n");
             return 0;

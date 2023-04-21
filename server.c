@@ -15,7 +15,7 @@
 #include "Prompt.h"
 /*Include paths*/
 
-#define BUFSIZE 1024
+#define BUFSIZE 2048
 
 int communication(int cfd);
 void OUTBOUND(int cfd, char **data, int call);
@@ -23,9 +23,6 @@ char *INBOUND(int cfd);
 void MAKERANDOMS(int *listPTR);
 int main(int argc, char const *argv[])
 {
-   int *test;
-   test = (int *)malloc(5 * sizeof(int));
-   MAKERANDOMS(test);
    int cfd; // Will hold socket ID
    if (argc != 3)
    {
@@ -64,7 +61,7 @@ int main(int argc, char const *argv[])
       fprintf(stderr, "[!]listen() error.\n");
       exit(-1);
    }
-   fprintf(stdout, "[+]Listening on %s:%d \n[+]<Press ctrl-C to terminate>\n", argv[1], atoi(argv[2]));
+   fprintf(stdout, "[+]Listening on %s:%d \n[=]<Press ctrl-C to terminate>\n", argv[1], atoi(argv[2]));
 
    while ((cfd = accept(lfd, (struct sockaddr *)&serverAddress, (socklen_t *)&addressLEN)) != -1)
    {
@@ -142,16 +139,16 @@ int communication(int cfd)
    }
    return 0;
 }
-void OUTBOUND(int cfd, char **data, int call)
+void OUTBOUND(int cfd, char **data, int call) //OUTBOUND function is used to send data
 {
-   if (call == 0)
+   if (call == 0)  //If the call is zero, we want to send the inital  prompt
       for (int i = 0; i < 6; i++)
       {
-         send(cfd, data[i], strlen(data[i]), 0);
+         send(cfd, data[i], strlen(data[i]), 0); //Send each line in the prompt
       }
    else
    {
-      send(cfd, data[call - 1], strlen(data[call - 1]), 0);
+      send(cfd, data[call - 1], strlen(data[call - 1]), 0); //Send the specific line
    }
    return;
 }
@@ -189,5 +186,6 @@ void MAKERANDOMS(int *listPTR)
          }
       }
    }
+   fprintf(stdout, "[=]Questions to be given [%d] [%d] [%d] [%d] [%d]\n", listPTR[0], listPTR[1], listPTR[2], listPTR[3], listPTR[4]);
    return;
 }
