@@ -15,8 +15,7 @@ char* response[] = {
     "Your score was 2/5\n",
     "Your score was 3/5\n",
     "Your score was 4/5\n",
-    "Your score was 5/5\n",
-    "END"
+    "Your score was 5/5\n"
 };
 
 /*************************************

@@ -11,7 +11,6 @@
 #include <time.h>
 #include <wait.h>
 
-
 #define BUFSIZE 2048
 
 int communication(int cfd);
@@ -67,36 +66,37 @@ char *INBOUND(int cfd)
     { // the other connection has closed the socket (ctrl-C)
         return NULL;
     }
-    //fprintf(stdout, "[+]Data Recieved\n");
+    // fprintf(stdout, "[+]Data Recieved\n");
     return buff;
 }
 int communication(int cfd)
 {
     char *returned;
-    char *endcheck;
-    char end1[] = {'y','e','.','\0'};
-    char end2[] = {'E','N','D','\0'};
     char buffer[BUFSIZE];
     while (1)
     {
         returned = INBOUND(cfd);
-        endcheck = (char *) malloc(4 * sizeof(char));
-        endcheck = &returned[strlen(returned)-4];
-        endcheck[3] = '\0';
-        if (strcmp(endcheck, end1) == 0 || strcmp(endcheck, end2) == 0)
+        if (returned == NULL)
         {
-            printf("[-]Server has closed the connection.\n");
+            printf("[!]Connection closed by server.\n");
             return 0;
         }
-        printf("%s\n", returned);
-        fgets(buffer, BUFSIZE, stdin);
-        int i = 0;
-        while (buffer[i] != '\n')
+        for (int i = 0; returned[i] != EOF && returned[i] != '\0'; i++)
         {
-            i++;
+            printf("%c", returned[i]);
         }
-        buffer[i] = '\0';
-        send(cfd, buffer, i + 1, 0);
+        printf("\n");
+        if (returned[strlen(returned) - 1] == EOF)
+        {
+            fgets(buffer, BUFSIZE, stdin);
+            int i = 0;
+            while (buffer[i] != '\n')
+            {
+                i++;
+            }
+            buffer[i] = '\0';
+            send(cfd, buffer, i + 1, 0);
+        }
     }
     return 0;
 }
