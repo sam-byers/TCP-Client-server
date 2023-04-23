@@ -11,9 +11,10 @@
 #include <errno.h>
 #include <time.h>
 #include <wait.h>
+/*include standard libs*/
 #include "QuizDB.h"
 #include "Prompt.h"
-/*Include paths*/
+/*include the quiz questions and the user prompts*/
 
 #define BUFSIZE 2048 // Define the maximum buffer size
 
@@ -120,34 +121,34 @@ int communication(int cfd) // Communication function that runs the quiz communic
    {
       questions = (int *)malloc(5 * sizeof(int)); // Then malloc the questions array
       MAKERANDOMS(questions);                     // Call makerandoms to make the radoms for the questions
-      for (int i = 0; i < 5; i++)
+      for (int i = 0; i < 5; i++)                 // For each of the 5 questions
       {
-         OUTBOUND(cfd, QuizQ, questions[i] + 1, 1);
-         returned = INBOUND(cfd);
+         OUTBOUND(cfd, QuizQ, questions[i] + 1, 1);                   // Send the question, terminated with the EOF character
+         returned = INBOUND(cfd);                                     // Then capture the users response
          if (strcmp(returned, "") == 0 || strcmp(returned, " ") == 0) // We want to ignore accidental empty inputs
          {
-            i--;
-            continue;
+            i--;      // Decrement i
+            continue; // Continue
          }
-         else if (strcmp(returned, QuizA[questions[i]]) == 0)
+         else if (strcmp(returned, QuizA[questions[i]]) == 0) // If the respone is the same as the answer (case and formatting sensitive)
          {
-            OUTBOUND(cfd, response, 1, 0);
-            correct++;
+            OUTBOUND(cfd, response, 1, 0); // Send the correct answer response
+            correct++;                     // Count the correct answer
          }
-         else
+         else // Otherwise the answer is wrong
          {
-            OUTBOUND(cfd, response, 2, 0);
-            OUTBOUND(cfd, QuizA, questions[i] + 1, 0);
-            OUTBOUND(cfd, response, 4, 0);
+            OUTBOUND(cfd, response, 2, 0);             // Send the incorrect answer string
+            OUTBOUND(cfd, QuizA, questions[i] + 1, 0); // Followed by the correct answer
+            OUTBOUND(cfd, response, 4, 0);             // Then a newline character
          }
       }
-      OUTBOUND(cfd, response, 5 + correct, 1);
-      correct = 0;
-      free(questions);
+      OUTBOUND(cfd, response, 5 + correct, 1); // When the quiz has ended, print the number of correct answers the user got
+      correct = 0;                             // Reset the correct value, this is just to ensure that no error occurs if the client disconnects before the end of the quiz
+      free(questions);                         // Free the questions array
    }
    else
    {
-      OUTBOUND(cfd, response, 3, 1);
+      OUTBOUND(cfd, response, 3, 1); // Otherwise, if the user does not want to do the quiz, (q or otherwise), send the goodbye message
    }
    return 0;
 }
@@ -168,12 +169,12 @@ void OUTBOUND(int cfd, char **data, int call, int end) // OUTBOUND function is u
    return;
 }
 
-char *INBOUND(int cfd)
+char *INBOUND(int cfd) // Recieve the response from the client
 {
    static char buff[BUFSIZE];
    int nBYTES = recv(cfd, buff, BUFSIZE, 0); // receiving the prompt
-   buff[nBYTES] = '\0';
-   if (nBYTES == -1)
+   buff[nBYTES] = '\0';                      // Terminate recieved data with the null char
+   if (nBYTES == -1)                         // If there is an error, print the error
    {
       fprintf(stderr, "[!]recv() error.\n");
       exit(-1);
@@ -182,17 +183,17 @@ char *INBOUND(int cfd)
    { // the other connection has closed the socket (ctrl-C)
       return NULL;
    }
-   fprintf(stdout, "[+]Response Recieved:%s\n", buff);
-   return buff;
+   fprintf(stdout, "[+]Response Recieved:%s\n", buff); // Print the recieved response on the server side
+   return buff;                                        // return a pointer to the recieved data
 }
 
-void MAKERANDOMS(int *listPTR)
+void MAKERANDOMS(int *listPTR) // write a series of 5 unique random numbers to the supplied array arguent
 {
-   srand(time(NULL));
-   for (int i = 0; i < 5; i++)
+   srand(time(NULL));          // Use the time as a seed to generate random numbers
+   for (int i = 0; i < 5; i++) // For each of the 5 numbers to be generated
    {
-      listPTR[i] = rand() % 43 + 1;
-      for (int j = 0; j < i; j++)
+      listPTR[i] = rand() % 43 + 1; // generate a random number in the i position
+      for (int j = 0; j < i; j++)   // For each number we have written before
       {
          if (listPTR[i] == listPTR[j]) // if this value has appeared before
          {
@@ -202,5 +203,6 @@ void MAKERANDOMS(int *listPTR)
       }
    }
    fprintf(stdout, "[=]Questions to be given [%d] [%d] [%d] [%d] [%d]\n", listPTR[0], listPTR[1], listPTR[2], listPTR[3], listPTR[4]);
+   // Print the questions we are going to ask
    return;
 }
